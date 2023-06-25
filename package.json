@@ -1,0 +1,16 @@
+{
+  "name": "drive-time-tracking",
+  "version": "1.0.0",
+  "description": "Track drive time for newby driver day & night",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jon Nyman",
+  "license": "ISC",
+  "dependencies": {
+    "html-template-tag-stream": "^1.1.2",
+    "idb-keyval": "^6.2.1"
+  }
+}
