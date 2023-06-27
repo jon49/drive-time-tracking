@@ -3,3 +3,26 @@ body {
     margin: 0 auto;
 }
 
+.edit {
+    position: absolute;
+    right: 100%;
+}
+
+.edit:focus {
+    position: inherit;
+}
+
+.edit + label {
+    cursor: pointer;
+}
+
+.edit + label::after {
+    content: ' \0270E';
+    display: inline-block;
+    transform: rotate(90deg);
+}
+
+.edit:focus + label {
+    display: none;
+}
+

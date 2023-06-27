@@ -52,9 +52,9 @@ interface DBGet {
 export type TimeOfDay = "day" | "night"
 
 export interface Drive {
-    start: number
-    end: number
-    time: TimeOfDay
+    start?: string
+    end?: string
+    time?: TimeOfDay
 }
 
 export interface DriveDate {
