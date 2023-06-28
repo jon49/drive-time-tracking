@@ -3,7 +3,7 @@ import layout from "../_layout.html.js"
 import { searchParams } from "../../server/utils.js"
 import { Drive, DriveDate, TimeOfDay } from "../../server/db.js"
 import { PostHandlers } from "../../server/route.js"
-import driveTime from "../../server/drive-time-model.js"
+import createDb from "../../server/drive-time-model.js"
 
 function timeOfDay(time: TimeOfDay | undefined) {
     return (!time || time === "day")
@@ -22,17 +22,25 @@ function editEntry(index: number, drive: Drive, date: string) {
     <input type="hidden" name="index" value="${drive.start ? index : -1}">
     <input type="hidden" name="time" value="${drive.time}">
     <div class=grid>
-        <div>
-            <input id=start_${index} class=edit type=time name=start value="$${drive.start}">
-            <label for=start_${index}>Start time$${setTime(drive.start)}</label>
-        </div>
-        ${ !drive.start ? ""
+        <div>${
+            !drive.start
+                ? html`<button formaction="?handler=start">Start</button>`
             : html`
-            <div>
-                <input id=end_${index} class=edit type=time name=end value="$${drive.end}">
-                <label for=end_${index}>End time$${setTime(drive.end)}</label>
-            </div>`
-        }
+            <input id=start_${index} class=edit type=time name=start value="$${drive.start}" mpa-skip-focus>
+            <label for=start_${index}>Start time$${setTime(drive.start)} <span class=edit-pencil>&#9998;</span></label>`}
+        </div>
+        ${ () => {
+            if (drive.start && drive.end) {
+                return html`
+                <div>
+                    <input id=end_${index} class=edit type=time name=end value="$${drive.end}" mpa-skip-focus>
+                    <label for=end_${index}>Stop time$${setTime(drive.end)} <span class=edit-pencil>&#9998;</span></label>
+                </div>`
+            } else if (drive.start && !drive.end) {
+                return html`<button formaction="?handler=stop">Stop</button>`
+            }
+            return ""
+        }}
     </div>
     <br>
     ${ drive.start ? html`${ timeOfDay(drive.time) }` : "" }
@@ -51,34 +59,56 @@ function render(driveDate: DriveDate) {
     }
 
     return html`
-<h2>Edit Drives for ${driveDate.date}</h2>
+<h2>${driveDate.date}</h2>
 ${drives.map((drive, idx) => editEntry(idx, drive, date)).reverse()}`
 }
 
-
 const post : PostHandlers = {
-    update: ({ data }) => {
-        return driveTime.saveDrive(data)
+    update: async ({ data }) => {
+        let db = await createDb()
+        db.saveDrive(data)
     },
-    setNight: ({ data }) => {
+    setNight: async ({ data }) => {
+        let db = await createDb()
         data.time = "night"
-        return driveTime.saveDrive(data)
+        return db.saveDrive(data)
     },
-    setDay: ({ data }) => {
+    setDay: async ({ data }) => {
+        let db = await createDb()
         data.time = "day"
-        return driveTime.saveDrive(data)
+        return db.saveDrive(data)
+    },
+    start: async ({ data }) => {
+        let db = await createDb()
+        data.start = getCurrentTime()
+        return db.saveDrive(data)
+    },
+    stop: async ({ data }) => {
+        let db = await createDb()
+        data.end = getCurrentTime()
+        return db.saveDrive(data)
     },
 }
 
 let index = {
     route: /\/web\/entries\/edit\/$/,
     get: async (req: Request) => {
-        let driveDate = await driveTime.get(searchParams<{date?: string}>(req))
-        return layout(req, {
+        let db = await createDb()
+        let driveDate = await db.get(searchParams<{date?: string}>(req))
+        return layout(req, db.store, {
             main: render(driveDate)
         })
     },
     post,
+}
+
+function padNumber(num: number) {
+    return (""+num).padStart(2, "0")
+}
+
+function getCurrentTime() {
+    let date = new Date()
+    return `${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
 }
 
 function pluralize(count: number, singular: string, plural: string) {

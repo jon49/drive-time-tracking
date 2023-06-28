@@ -1,34 +1,61 @@
-import { get as get1, getMany, setMany, set as set1, update as update1 } from "idb-keyval"
+import { get as get1, getMany, setMany, set as set1, update as update1, createStore, UseStore } from "idb-keyval"
+import { reject } from "./utils.js"
+
+export async function getUserStore() {
+    let settings = <LocalSettings | undefined>(await get1("local-settings"))
+    if (!settings) {
+        // get global settings
+        let global = <GlobalSettings | undefined>(await get1("global-settings"))
+        if (!global) {
+            // create global settings
+            await set("global-settings", global = {
+                users: [
+                    { name: "anonymous" }
+                ],
+                _rev: 0
+            }, null)
+        }
+        set("local-settings", settings = { user: global.users[0].name, id: 0 }, null, false)
+    }
+    return createStore(`drive-${settings.id}`, ""+settings.id)
+}
 
 const get : DBGet = get1
 
+type Updated = Map<{ key: IDBValidKey, store?: string }, number>
+
 const _updated =
-    async (key: string) => {
-        await update1("updated", (val?: Map<string, number>) => {
+    async (key: string, revision: number, store: UseStore | null) => {
+        await update1("updated", (val?: Updated) => {
             if (val instanceof Set) {
-                let temp : Map<string, number> = new Map()
-                Array.from(val).forEach(x => temp.set(x, 0))
+                let temp : Updated = new Map()
+                Array.from(val).forEach(x => temp.set({key:x, store: store?.name}, 0))
                 val = temp
             }
-            return (val || new Map()).set(key, Date.now())
-        })
+            return (val || new Map()).set(key, revision)
+        }, store ?? undefined)
     }
 
-function set<K extends keyof DBAccessors>(key: K, value: DBAccessors[K], sync?: boolean): Promise<void>
-function set<T>(key: string, value: T, sync?: boolean): Promise<void>
-async function set(key: string, value: any, sync = true) {
-    await set1(key, value)
+function set<K extends keyof DBAccessors>(key: K, value: DBAccessors[K], store: UseStore | null, sync?: boolean): Promise<void>
+function set<T>(key: string, value: T, store: UseStore | null, sync?: boolean): Promise<void>
+async function set(key: string, value: any, store: UseStore | null, sync = true) {
+    await set1(key, value, store ?? undefined)
     if (sync) {
-        await _updated(key)
+        await _updated(key, value._rev, store)
     }
 }
 
-function update<K extends keyof DBAccessors>(key: K, f: (val: DBAccessors[K]) => DBAccessors[K], sync?: { sync: boolean }): Promise<void>
-function update<T>(key: string, f: (val: T) => T, sync?: { sync: boolean }): Promise<void>
-async function update(key: string, f: (v: any) => any, sync = { sync: true }) {
+function update<K extends keyof DBAccessors>(key: K, f: (val: DBAccessors[K]) => DBAccessors[K], store: UseStore, sync?: { sync: boolean }): Promise<void>
+function update<T>(key: string, f: (val: T) => T, store: UseStore, sync?: { sync: boolean }): Promise<void>
+async function update(key: string, f: (v: any) => any, store: UseStore, options = { sync: true }) {
     await update1(key, f)
-    if (sync.sync) {
-        await _updated(key)
+    if (options.sync) {
+        let o : any = await get(key, store)
+        if (o && "_rev" in o) {
+            await _updated(key, o._rev, store)
+        } else {
+            reject(`Revision number not found for "${key}".`)
+        }
     }
 }
 
@@ -40,13 +67,15 @@ interface DBAccessors {
     "updated": Updated
 }
 
-export type Updated = Map<IDBValidKey, number>
-
 interface DBGet {
-    (key: "user-settings"): Promise<UserSettings | undefined>
-    (key: "updated"): Promise<Updated | undefined>
-    (key: "settings"): Promise<Settings | undefined>
-    <T>(key: string): Promise<T | undefined>
+    (key: "user-settings", store: UseStore): Promise<UserSettings | undefined>
+    (key: "updated", store: UseStore): Promise<Updated | undefined>
+    (key: "settings", store: UseStore): Promise<Settings | undefined>
+    <T>(key: string, store: UseStore): Promise<T | undefined>
+}
+
+interface Revision {
+    _rev: number
 }
 
 export type TimeOfDay = "day" | "night"
@@ -57,12 +86,12 @@ export interface Drive {
     time?: TimeOfDay
 }
 
-export interface DriveDate {
+export interface DriveDate extends Revision {
     date: string
     drives: Drive[]
 }
 
-export interface Settings {
+export interface Settings extends Revision {
     earliestDate?: string
     lastSyncedId?: number
     totalDayTimeHours?: number
@@ -72,5 +101,15 @@ export interface Settings {
 export interface UserSettings {
     goalDayHours?: number
     goalNightHours?: number
+    name: string
+}
+
+export interface GlobalSettings extends Revision {
+    users: UserSettings[]
+}
+
+export interface LocalSettings {
+    user: string
+    id: number
 }
 

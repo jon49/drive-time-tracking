@@ -1,10 +1,10 @@
 import html from "../server/html.js"
-import * as db from "../server/db.js"
 import { version } from "../server/settings.js"
+import { UseStore, get } from "idb-keyval"
 
-const getSyncCount = async () => (await db.get("updated"))?.size ?? 0
+const getSyncCount = async (store: UseStore) => (await get("updated", store))?.size ?? 0
 
-const layout = (req: Request, o: LayoutTemplateArguments) => {
+const layout = (req: Request, store: UseStore | null, o: LayoutTemplateArguments) => {
     const url = req.url
     const { main, head, scripts } = o
     return html`
@@ -23,12 +23,13 @@ const layout = (req: Request, o: LayoutTemplateArguments) => {
     <div id=messages></div>
     <a href="/login?handler=logout" style="position: absolute; top: 10px; right: 10px;">Logout</a>
     <header>
-        <div class=sync>
+        <div class=grid>
             <h1 class=inline>Drive Tracker</h1>
-            <form class=inline method=POST action="/web/sync/">
+            ${ store == null ? "" :
+                html`<form class=inline method=POST action="/web/sync/">
                 <input type=hidden name=url value="${url}">
-                <button disabled title="Sync hasn't been implemented yet.">Sync&nbsp;-&nbsp;${getSyncCount}</button>
-            </form>
+                <button disabled title="Sync hasn't been implemented yet.">Sync&nbsp;-&nbsp;${getSyncCount(store)}</button>
+            </form>` }
         </div>
         <nav>
             <a href="/web/entries">Entries</a>

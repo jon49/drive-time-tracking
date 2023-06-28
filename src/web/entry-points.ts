@@ -1,7 +1,7 @@
 export default [
   {
     "url": "/web/css/app.css",
-    "file": "/web/css/app.ae4392cb.css"
+    "file": "/web/css/app.3adc4c57.css"
   },
   {
     "url": "/web/css/index.css",
@@ -13,6 +13,6 @@ export default [
   },
   {
     "url": "/web/js/lib/mpa.min.js",
-    "file": "/web/js/lib/mpa.min.6AUKBQAY.js"
+    "file": "/web/js/lib/mpa.min.3X2IRBZ6.js"
   }
 ]

@@ -16,13 +16,12 @@ body {
     cursor: pointer;
 }
 
-.edit + label::after {
-    content: ' \0270E';
-    display: inline-block;
-    transform: rotate(90deg);
-}
-
 .edit:focus + label {
     display: none;
+}
+
+.edit-pencil {
+    display: inline-block;
+    transform: rotate(90deg);
 }
 

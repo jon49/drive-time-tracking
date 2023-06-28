@@ -1,4 +1,5 @@
-import { DriveDate, get, set } from "./db.js"
+import { UseStore } from "idb-keyval"
+import { DriveDate, get, getUserStore, set } from "./db.js"
 import { reject } from "./utils.js"
 import { createDateString, createInteger, createTimeOfDay, createTimeString, maybe, validateObject } from "./validation.js"
 
@@ -15,14 +16,23 @@ const dateValidator = {
 }
 
 class DriveTime {
-    constructor() { }
+
+    store: UseStore
+
+    constructor(store: UseStore) {
+        this.store = store
+    }
 
     async get(date_: any) {
         let { date } = await validateObject(date_, dateValidator)
         if (!date) {
             date = new Date().toISOString().slice(0, 10)
         }
-        return  (await get<DriveDate>(date)) ?? { date, drives: [] }
+        return  (await get<DriveDate>(date, this.store)) ?? {
+            date,
+            drives: [],
+            _rev: 0,
+        }
     }
 
     async saveDrive(data: any) {
@@ -38,9 +48,12 @@ class DriveTime {
         } else {
             Object.assign(current, drive)
         }
-        await set(date, driveDate)
+        await set(date, driveDate, this.store)
     }
 }
 
-export default new DriveTime()
+export default async function getDriveTime() {
+    let store = await getUserStore()
+    return new DriveTime(store)
+}
 
