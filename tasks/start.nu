@@ -2,7 +2,7 @@
 
 def main [build: bool = false] {
 
-    let targetDir = "docs"
+    let targetDir = "public"
 
     rm -r -f $targetDir
 
