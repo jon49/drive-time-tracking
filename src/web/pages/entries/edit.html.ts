@@ -4,6 +4,7 @@ import { searchParams } from "../../server/utils.js"
 import { Drive, DriveDate, TimeOfDay } from "../../server/db.js"
 import { PostHandlers } from "../../server/route.js"
 import createDb from "../../server/drive-time-model.js"
+import { getCurrentTime, pluralize, toLocaleTimeString, totalTime } from "../utils.js"
 
 function timeOfDay(time: TimeOfDay | undefined) {
     return (!time || time === "day")
@@ -102,51 +103,16 @@ let index = {
     post,
 }
 
-function padNumber(num: number) {
-    return (""+num).padStart(2, "0")
-}
-
-function getCurrentTime() {
-    let date = new Date()
-    return `${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
-}
-
-function pluralize(count: number, singular: string, plural: string) {
-    return count === 1 ? singular : plural
-}
-
-function calculateHours(start: string, end: string) {
-    let startParts = start.split(":")
-    let endParts = end.split(":")
-    let startHours = parseInt(startParts[0])
-    let endHours = parseInt(endParts[0])
-    let startMinutes = parseInt(startParts[1])
-    let endMinutes = parseInt(endParts[1])
-    let hours = endHours - startHours
-    let minutes = endMinutes - startMinutes
-    if (minutes < 0) {
-        hours -= 1
-        minutes += 60
-    }
-    return html`<p>Drive time ${hours} ${pluralize(hours, "hour", "hours")} and ${minutes} ${pluralize(minutes, "minute", "minutes")}.</p>`
-}
-
-function toLocaleTimeString(time: string) {
-    let parts = time.split(":")
-    let hours = parseInt(parts[0])
-    let minutes = parseInt(parts[1])
-    let date = new Date()
-    date.setHours(hours)
-    date.setMinutes(minutes)
-    let local = date.toLocaleTimeString()
-    return `${local.slice(0, 5)}${local.slice(-3)}`
-}
-
 function setTime(time: string | undefined) {
     if (time) {
         return `: ${toLocaleTimeString(time)}`
     }
     return ""
+}
+
+function calculateHours(start: string, end: string) {
+    let { hours, minutes } = totalTime(start, end)
+    return html`<p>Drive time ${hours} ${pluralize(hours, "hour", "hours")} and ${minutes} ${pluralize(minutes, "minute", "minutes")}.</p>`
 }
 
 export default index
