@@ -60,7 +60,12 @@ function render(driveDate: DriveDate) {
     }
 
     return html`
-<h2>${driveDate.date}</h2>
+<h2>
+    <form onchange="this.submit()">
+        <input id=date class=edit type=date name=date value="$${date}">
+        <label for=date><strong>${driveDate.date}</strong> <span class=edit-pencil>&#9998;</span></label>
+    </form>
+</h2>
 ${drives.map((drive, idx) => editEntry(idx, drive, date)).reverse()}`
 }
 
