@@ -1,4 +1,4 @@
-import html from "../../server/html.js"
+import html, { when } from "../../server/html.js"
 import layout from "../_layout.html.js"
 import { searchParams } from "../../server/utils.js"
 import { Drive, DriveDate, TimeOfDay } from "../../server/db.js"
@@ -18,7 +18,7 @@ function editEntry(index: number, drive: Drive, date: string) {
     return html`
 <article>
 <form method="POST" action="?handler=update" onchange="this.submit()">
-    ${ drive.start && drive.end ? calculateHours(drive.start, drive.end) : html`<p>Hours: 0</p>` }
+    ${ when(!!(drive.start && drive.end), () => calculateHours(drive.start, drive.end)) }
     <input type="hidden" name="date" value="${date}">
     <input type="hidden" name="index" value="${drive.start ? index : -1}">
     <input type="hidden" name="time" value="${drive.time}">
@@ -44,7 +44,7 @@ function editEntry(index: number, drive: Drive, date: string) {
         }}
     </div>
     <br>
-    ${ drive.start ? html`${ timeOfDay(drive.time) }` : "" }
+    ${ when(!!drive.start, () => html`${ timeOfDay(drive.time) }`) }
 </form>
 </article>`
 }
@@ -115,7 +115,8 @@ function setTime(time: string | undefined) {
     return ""
 }
 
-function calculateHours(start: string, end: string) {
+function calculateHours(start: string | undefined, end: string | undefined) {
+    if (!start || !end) return null
     let { hours, minutes } = totalTime(start, end)
     return html`<p>Drive time ${hours} ${pluralize(hours, "hour", "hours")} and ${minutes} ${pluralize(minutes, "minute", "minutes")}.</p>`
 }

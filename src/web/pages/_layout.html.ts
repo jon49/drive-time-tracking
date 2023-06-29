@@ -1,4 +1,4 @@
-import html from "../server/html.js"
+import html, { when } from "../server/html.js"
 import { version } from "../server/settings.js"
 import { UseStore, get } from "idb-keyval"
 
@@ -24,7 +24,7 @@ const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArg
     <div id=messages></div>
     <nav>
         <ul>
-            <li><strong>Drive Tracker</strong></li>
+            <li><a href="/web/"><strong>Drive Tracker</strong></a></li>
         </ul>
         <ul>
             ${[
@@ -44,9 +44,7 @@ const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArg
     <form id=sync-form method=POST action="/web/sync/"></form>
     <main>${main}</main>
     <footer><p>${version}</p></footer>
-    ${ scripts
-         ? scripts.map(x => html`<script src="${x}" type=module></script>`)
-       : null }
+    ${ when(!!scripts, () => scripts!.map(x => html`<script src="${x}" type=module></script>`)) }
     <script src="/web/js/lib/mpa.min.js"></script>
 </body>
 </html>`
