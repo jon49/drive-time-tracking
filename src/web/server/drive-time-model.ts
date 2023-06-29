@@ -2,6 +2,7 @@ import { UseStore } from "idb-keyval"
 import { DriveDate, get, getUserStore, set } from "./db.js"
 import { reject } from "./utils.js"
 import { createDateString, createInteger, createTimeOfDay, createTimeString, maybe, validateObject } from "./validation.js"
+import { getCurrentDate } from "../pages/utils.js"
 
 const driveValidator = {
     date: createDateString('date'),
@@ -23,10 +24,10 @@ class DriveTime {
         this.store = store
     }
 
-    async get(date_: any) {
+    async get(date_: { date?: string }) {
         let { date } = await validateObject(date_, dateValidator)
         if (!date) {
-            date = new Date().toISOString().slice(0, 10)
+            date = getCurrentDate()
         }
         return  (await get<DriveDate>(date, this.store)) ?? {
             date,
@@ -40,7 +41,7 @@ class DriveTime {
         if (start && end && start > end) {
             return reject("Start time must be before end time")
         }
-        let driveDate = await this.get(date)
+        let driveDate = await this.get({ date })
         let current = driveDate.drives[index]
         let drive = { start, end, time: time || "day" }
         if (!current) {
