@@ -9,10 +9,10 @@ export default [
   },
   {
     "url": "/web/js/app-loader.js",
-    "file": "/web/js/app-loader.3ZZNWHTS.js"
+    "file": "/web/js/app-loader.KWM22TEQ.js"
   },
   {
     "url": "/web/js/lib/mpa.min.js",
-    "file": "/web/js/lib/mpa.min.J3HTHOAH.js"
+    "file": "/web/js/lib/mpa.min.3X2IRBZ6.js"
   }
 ]

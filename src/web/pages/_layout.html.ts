@@ -4,9 +4,10 @@ import { UseStore, get } from "idb-keyval"
 
 const getSyncCount = async (store: UseStore) => (await get("updated", store))?.size ?? 0
 
-const layout = (req: Request, store: UseStore | null, o: LayoutTemplateArguments) => {
-    const url = req.url
+const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArguments) => {
+    const url = new URL(req.url).pathname
     const { main, head, scripts } = o
+    const syncCount = store ? (await getSyncCount(store)) : ""
     return html`
 <!DOCTYPE html>
 <html>
@@ -21,22 +22,26 @@ const layout = (req: Request, store: UseStore | null, o: LayoutTemplateArguments
 </head>
 <body>
     <div id=messages></div>
-    <a href="/login?handler=logout" style="position: absolute; top: 10px; right: 10px;">Logout</a>
-    <header>
-        <div class=grid>
-            <h1 class=inline>Drive Tracker</h1>
-            ${ store == null ? "" :
-                html`<form class=inline method=POST action="/web/sync/">
-                <input type=hidden name=url value="${url}">
-                <button disabled title="Sync hasn't been implemented yet.">Sync&nbsp;-&nbsp;${getSyncCount(store)}</button>
-            </form>` }
-        </div>
-        <nav>
-            <a href="/web/entries">Entries</a>
-            | <a href="/web/entries/edit">Add/Edit</a>
-            | <a href="/web/user-settings/edit">User Settings</a>
-        </nav>
-    </header>
+    <nav>
+        <ul>
+            <li><strong>Drive Tracker</strong></li>
+        </ul>
+        <ul>
+            ${[
+                { url: "/web/entries/", text: "Drives" },
+                { url: "/web/entries/edit/", text: "New" },
+                { url: "/web/user-settings/edit/", text: "User Settings" },
+            ].map(x => {
+                if (x.url === url) {
+                    return html`<li><strong>${x.text}</strong></li>`
+                }
+                return html`<li><a href="${x.url}">${x.text}</a></li>`
+            }) }
+            <li><button role=button form=sync-form disabled title="Sync hasn't been implemented yet.">Sync&nbsp;-&nbsp;${syncCount}</button></li>
+            <li><a role="button" disabled href="/login?handler=logout">Logout</a></li>
+        </ul>
+    </nav>
+    <form id=sync-form method=POST action="/web/sync/"></form>
     <main>${main}</main>
     <footer><p>${version}</p></footer>
     ${ scripts
