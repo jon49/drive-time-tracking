@@ -12,8 +12,8 @@ const driveValidator = {
     index: createInteger('index'),
 }
 
-const dateValidator = {
-    date: maybe(createDateString('date'))
+const maybeDateValidator = {
+    date: maybe(createDateString('date')),
 }
 
 class DriveTime {
@@ -25,7 +25,7 @@ class DriveTime {
     }
 
     async get(date_: { date?: string }) {
-        let { date } = await validateObject(date_, dateValidator)
+        let { date } = await validateObject(date_, maybeDateValidator)
         if (!date) {
             date = getCurrentDate()
         }
@@ -48,6 +48,21 @@ class DriveTime {
             driveDate.drives.push(drive)
         } else {
             Object.assign(current, drive)
+        }
+        await set(date, driveDate, this.store)
+    }
+
+    async toggleTimeOfDay(data: any) {
+        let { date } = await validateObject(data, driveValidator)
+        let driveDate = await this.get({ date })
+        let drive = driveDate.drives[data.index]
+        if (!drive) {
+            return reject("No drive found")
+        }
+        if (drive.time === "day") {
+            drive.time = "night"
+        } else {
+            drive.time = "day"
         }
         await set(date, driveDate, this.store)
     }

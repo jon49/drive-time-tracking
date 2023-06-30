@@ -7,9 +7,8 @@ import createDb from "../../server/drive-time-model.js"
 import { getCurrentTime, pluralize, toLocaleTimeString, totalTime } from "../utils.js"
 
 function timeOfDay(time: TimeOfDay | undefined) {
-    return (!time || time === "day")
-        ? html`<button formaction="?handler=setNight">Day &#9728;</button>`
-    : html`<button formaction="?handler=setDay">Night &#9789;</button>`
+    let text = time === "night" ? "Night &#9789;" : "Day &#9728;"
+    return html`<button formaction="?handler=toggleTime">$${text}</button>`
 }
 
 function editEntry(index: number, drive: Drive, date: string) {
@@ -74,15 +73,9 @@ const post : PostHandlers = {
         let db = await createDb()
         db.saveDrive(data)
     },
-    setNight: async ({ data }) => {
+    toggleTime: async ({ data }) => {
         let db = await createDb()
-        data.time = "night"
-        return db.saveDrive(data)
-    },
-    setDay: async ({ data }) => {
-        let db = await createDb()
-        data.time = "day"
-        return db.saveDrive(data)
+        return db.toggleTimeOfDay(data)
     },
     start: async ({ data }) => {
         let db = await createDb()
