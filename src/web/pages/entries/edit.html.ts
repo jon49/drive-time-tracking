@@ -8,7 +8,7 @@ import { getCurrentTime, pluralize, toLocaleTimeString, totalTime } from "../uti
 
 function timeOfDay(time: TimeOfDay | undefined) {
     let text = time === "night" ? "Night &#9789;" : "Day &#9728;"
-    return html`<button formaction="?handler=toggleTime">$${text}</button>`
+    return html`<button id=toggle-time formaction="?handler=toggleTime">$${text}</button>`
 }
 
 function editEntry(index: number, drive: Drive, date: string) {
