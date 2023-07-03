@@ -1,4 +1,4 @@
-import { get as get1, getMany, setMany, set as set1, update as update1, createStore, UseStore } from "idb-keyval"
+import { get as get1, getMany, setMany, set as set1, update as update1, createStore, UseStore, entries as entries1 } from "idb-keyval"
 import { reject } from "./utils.js"
 
 export async function getUserStore() {
@@ -59,7 +59,8 @@ async function update(key: string, f: (v: any) => any, store: UseStore, options 
     }
 }
 
-export { update, set, get, getMany, setMany }
+const entries = entries1
+export { update, set, get, getMany, setMany, entries }
 
 interface DBAccessors {
     "user-settings": UserSettings

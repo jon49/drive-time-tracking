@@ -1,8 +1,8 @@
 import { UseStore } from "idb-keyval"
-import { DriveDate, get, getUserStore, set } from "./db.js"
+import { DriveDate, get, getUserStore, set, entries } from "./db.js"
 import { reject } from "./utils.js"
 import { createDateString, createInteger, createTimeOfDay, createTimeString, maybe, validateObject } from "./validation.js"
-import { getCurrentDate } from "../pages/utils.js"
+import { getCurrentDate, totalTime } from "../pages/utils.js"
 
 const driveValidator = {
     date: createDateString('date'),
@@ -15,6 +15,8 @@ const driveValidator = {
 const maybeDateValidator = {
     date: maybe(createDateString('date')),
 }
+
+const isDate = /^\d{4}-\d{2}-\d{2}$/
 
 class DriveTime {
 
@@ -65,6 +67,47 @@ class DriveTime {
             drive.time = "day"
         }
         await set(date, driveDate, this.store)
+    }
+
+    async totalTime() {
+        let myEntries = await entries(this.store)
+        let dayTotal = {
+            minutes: 0,
+            hours: 0,
+        }
+        let nightTotal = {
+            minutes: 0,
+            hours: 0,
+        }
+        for (let entry of myEntries) {
+            let key = entry[0]
+            if (!(typeof key === "string") || !isDate.test(key)) continue
+            for (let drive of entry[1].drives) {
+                if (drive.start && drive.end) {
+                    let time = totalTime(drive.start, drive.end)
+                    if (!time) continue
+                    if (drive.time === "day") {
+                        dayTotal.minutes += time.minutes
+                        dayTotal.hours += time.hours
+                    } else {
+                        nightTotal.minutes += time.minutes
+                        nightTotal.hours += time.hours
+                    }
+                }
+            }
+        }
+        return { dayTotal: {
+            minutes: dayTotal.minutes,
+            hours: dayTotal.hours,
+        }, nightTotal: {
+            minutes: nightTotal.minutes,
+            hours: nightTotal.hours,
+        }}
+    }
+
+    async syncCount() {
+        let updated = (await get("updated", this.store))?.size ?? 0
+        return updated
     }
 }
 

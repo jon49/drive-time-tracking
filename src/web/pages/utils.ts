@@ -12,11 +12,12 @@ export function getCurrentTime() {
     return `${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
 }
 
-export function pluralize(count: number, singular: string, plural: string) {
-    return count === 1 ? singular : plural
+export function pluralize(count: number) {
+    return count === 1 ? '' : 's'
 }
 
 export function totalTime(start: string, end: string) {
+    if (!start || !end) return
     let startParts = start.split(":")
     let endParts = end.split(":")
     let startHours = parseInt(startParts[0])

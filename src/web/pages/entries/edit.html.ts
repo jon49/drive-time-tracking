@@ -111,7 +111,7 @@ function setTime(time: string | undefined) {
 function calculateHours(start: string | undefined, end: string | undefined) {
     if (!start || !end) return null
     let { hours, minutes } = totalTime(start, end)
-    return html`<p>Drive time ${hours} ${pluralize(hours, "hour", "hours")} and ${minutes} ${pluralize(minutes, "minute", "minutes")}.</p>`
+    return html`<p>Drive time ${hours} hour${pluralize(hours)} and ${minutes} minute${pluralize(minutes)}.</p>`
 }
 
 export default index

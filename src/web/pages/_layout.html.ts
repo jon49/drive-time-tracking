@@ -1,13 +1,16 @@
 import html, { when } from "../server/html.js"
 import { version } from "../server/settings.js"
 import { UseStore, get } from "idb-keyval"
+import createDb from "../server/drive-time-model.js"
+import { pluralize } from "./utils.js"
 
 const getSyncCount = async (store: UseStore) => (await get("updated", store))?.size ?? 0
 
 const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArguments) => {
     const url = new URL(req.url).pathname
     const { main, head, scripts } = o
-    const syncCount = store ? (await getSyncCount(store)) : ""
+    let db = await createDb()
+    let [syncCount, { dayTotal, nightTotal }] = await Promise.all([db.syncCount(), db.totalTime()])
     return html`
 <!DOCTYPE html>
 <html>
@@ -28,7 +31,6 @@ const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArg
         </ul>
         <ul>
             ${[
-                { url: "/web/entries/", text: "Drives" },
                 { url: "/web/entries/edit/", text: "New" },
                 { url: "/web/user-settings/edit/", text: "User Settings" },
             ].map(x => {
@@ -42,7 +44,12 @@ const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArg
         </ul>
     </nav>
     <form id=sync-form method=POST action="/web/sync/"></form>
-    <main>${main}</main>
+    <p><small>&#9728;
+    ${dayTotal.hours} hour${pluralize(dayTotal.hours)}
+    ${dayTotal.minutes} minute${pluralize(dayTotal.minutes)}
+    🚗 &#9789; ${nightTotal.hours} hour${pluralize(nightTotal.hours)}
+    ${nightTotal.minutes} minute${pluralize(nightTotal.minutes)}.</small></p>
+    ${main}
     <footer><p>${version}</p></footer>
     ${ when(!!scripts, () => scripts!.map(x => html`<script src="${x}" type=module></script>`)) }
     <script src="/web/js/lib/mpa.min.js"></script>
