@@ -1,12 +1,9 @@
 import html, { when } from "../server/html.js"
 import { version } from "../server/settings.js"
-import { UseStore, get } from "idb-keyval"
 import createDb from "../server/drive-time-model.js"
 import { pluralize } from "./utils.js"
 
-const getSyncCount = async (store: UseStore) => (await get("updated", store))?.size ?? 0
-
-const layout = async (req: Request, store: UseStore | null, o: LayoutTemplateArguments) => {
+const layout = async (req: Request, o: LayoutTemplateArguments) => {
     const url = new URL(req.url).pathname
     const { main, head, scripts } = o
     let db = await createDb()

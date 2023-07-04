@@ -1,5 +1,4 @@
-import { UseStore } from "idb-keyval"
-import { DriveDate, get, getUserStore, set, entries } from "./db.js"
+import { DriveDate, get, getUserIndex, set, entries } from "./db.js"
 import { reject } from "./utils.js"
 import { createDateString, createInteger, createTimeOfDay, createTimeString, maybe, validateObject } from "./validation.js"
 import { getCurrentDate, totalTime } from "../pages/utils.js"
@@ -18,12 +17,19 @@ const maybeDateValidator = {
 
 const isDate = /^\d{4}-\d{2}-\d{2}$/
 
+type Unwrap<T> =
+	T extends Promise<infer U> ? U :
+	T extends (...args: any) => Promise<infer U> ? U :
+	T extends (...args: any) => infer U ? U :
+	T
+type ResultType<T> = { [K in keyof T]: Unwrap<T[K]> }
+
 class DriveTime {
 
-    store: UseStore
+    userId: number
 
-    constructor(store: UseStore) {
-        this.store = store
+    constructor(userId: number) {
+        this.userId = userId
     }
 
     async get(date_: { date?: string }) {
@@ -31,14 +37,14 @@ class DriveTime {
         if (!date) {
             date = getCurrentDate()
         }
-        return  (await get<DriveDate>(date, this.store)) ?? {
+        return  (await get<DriveDate>([this.userId, date])) ?? {
             date,
             drives: [],
             _rev: 0,
         }
     }
 
-    async saveDrive(data: any) {
+    async saveDrive(data: ResultType<typeof driveValidator>) {
         let { date, start, end, time, index } = await validateObject(data, driveValidator)
         if (start && end && start > end) {
             return reject("Start time must be before end time")
@@ -51,26 +57,21 @@ class DriveTime {
         } else {
             Object.assign(current, drive)
         }
-        await set(date, driveDate, this.store)
+        await set(<any>[this.userId, date], driveDate)
     }
 
-    async toggleTimeOfDay(data: any) {
-        let { date } = await validateObject(data, driveValidator)
-        let driveDate = await this.get({ date })
-        let drive = driveDate.drives[data.index]
-        if (!drive) {
-            return reject("No drive found")
-        }
+    async toggleTimeOfDay(data: ResultType<typeof driveValidator>) {
+        let drive = await validateObject(data, driveValidator)
         if (drive.time === "day") {
             drive.time = "night"
         } else {
             drive.time = "day"
         }
-        await set(date, driveDate, this.store)
+        await this.saveDrive(drive)
     }
 
     async totalTime() {
-        let myEntries = await entries(this.store)
+        let myEntries = await entries()
         let dayTotal = {
             minutes: 0,
             hours: 0,
@@ -80,12 +81,13 @@ class DriveTime {
             hours: 0,
         }
         for (let entry of myEntries) {
-            let key = entry[0]
+            let key_ = entry[0]
+            if (!Array.isArray(key_)) continue
+            let key = key_[1]
             if (!(typeof key === "string") || !isDate.test(key)) continue
             for (let drive of entry[1].drives) {
                 if (drive.start && drive.end) {
                     let time = totalTime(drive.start, drive.end)
-                    if (!time) continue
                     if (drive.time === "day") {
                         dayTotal.minutes += time.minutes
                         dayTotal.hours += time.hours
@@ -96,6 +98,7 @@ class DriveTime {
                 }
             }
         }
+
         return { dayTotal: {
             minutes: dayTotal.minutes,
             hours: dayTotal.hours,
@@ -106,13 +109,13 @@ class DriveTime {
     }
 
     async syncCount() {
-        let updated = (await get("updated", this.store))?.size ?? 0
+        let updated = (await get("updated"))?.size ?? 0
         return updated
     }
 }
 
 export default async function getDriveTime() {
-    let store = await getUserStore()
-    return new DriveTime(store)
+    let index = await getUserIndex()
+    return new DriveTime(index)
 }
 

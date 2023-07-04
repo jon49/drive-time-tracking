@@ -94,9 +94,7 @@ let index = {
     get: async (req: Request) => {
         let db = await createDb()
         let driveDate = await db.get(searchParams<{date?: string}>(req))
-        return layout(req, db.store, {
-            main: render(driveDate)
-        })
+        return layout(req, { main: render(driveDate) })
     },
     post,
 }

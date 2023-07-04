@@ -4,7 +4,7 @@ import layout from "./_layout.html.js"
 let index = {
     route: /\/web\/$/,
     get: (req: Request) => {
-        return layout(req, null, { main: html`<p>Welcome to drive tracking!</p>` })
+        return layout(req, { main: html`<p>Welcome to drive tracking!</p>` })
     }
 }
 

@@ -17,7 +17,7 @@ export function pluralize(count: number) {
 }
 
 export function totalTime(start: string, end: string) {
-    if (!start || !end) return
+    if (!start || !end) return { hours: 0, minutes: 0 }
     let startParts = start.split(":")
     let endParts = end.split(":")
     let startHours = parseInt(startParts[0])

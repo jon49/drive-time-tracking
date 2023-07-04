@@ -1,7 +1,7 @@
-import { get as get1, getMany, setMany, set as set1, update as update1, createStore, UseStore, entries as entries1 } from "idb-keyval"
+import { get as get1, getMany, setMany, set as set1, update as update1, entries as entries1 } from "idb-keyval"
 import { reject } from "./utils.js"
 
-export async function getUserStore() {
+export async function getUserIndex() {
     let settings = <LocalSettings | undefined>(await get1("local-settings"))
     if (!settings) {
         // get global settings
@@ -13,46 +13,44 @@ export async function getUserStore() {
                     { name: "anonymous" }
                 ],
                 _rev: 0
-            }, null)
+            })
         }
-        set("local-settings", settings = { user: global.users[0].name, id: 0 }, null, false)
+        set("local-settings", settings = { user: global.users[0].name, id: 0 }, false)
     }
-    return createStore(`drive-${settings.id}`, ""+settings.id)
+    return settings?.id ?? 0
 }
 
 const get : DBGet = get1
 
-type Updated = Map<{ key: IDBValidKey, store?: string }, number>
+type Updated = Map<{ key: IDBValidKey }, number>
 
 const _updated =
-    async (key: string, revision: number, store: UseStore | null) => {
+    async (key: IDBValidKey, revision: number) => {
         await update1("updated", (val?: Updated) => {
-            if (val instanceof Set) {
-                let temp : Updated = new Map()
-                Array.from(val).forEach(x => temp.set({key:x, store: store?.name}, 0))
-                val = temp
+            if (Array.isArray(key)) {
+                key = JSON.stringify(key)
             }
             return (val || new Map()).set(key, revision)
-        }, store ?? undefined)
+        })
     }
 
-function set<K extends keyof DBAccessors>(key: K, value: DBAccessors[K], store: UseStore | null, sync?: boolean): Promise<void>
-function set<T>(key: string, value: T, store: UseStore | null, sync?: boolean): Promise<void>
-async function set(key: string, value: any, store: UseStore | null, sync = true) {
-    await set1(key, value, store ?? undefined)
+function set<K extends keyof DBAccessors>(key: K, value: DBAccessors[K], sync?: boolean): Promise<void>
+function set(key: string, value: any, sync?: boolean): Promise<void>
+async function set(key: IDBValidKey, value: any, sync = true) {
+    await set1(key, value)
     if (sync) {
-        await _updated(key, value._rev, store)
+        await _updated(key, value._rev)
     }
 }
 
-function update<K extends keyof DBAccessors>(key: K, f: (val: DBAccessors[K]) => DBAccessors[K], store: UseStore, sync?: { sync: boolean }): Promise<void>
-function update<T>(key: string, f: (val: T) => T, store: UseStore, sync?: { sync: boolean }): Promise<void>
-async function update(key: string, f: (v: any) => any, store: UseStore, options = { sync: true }) {
+function update<K extends keyof DBAccessors>(key: K, f: (val: DBAccessors[K]) => DBAccessors[K], sync?: { sync: boolean }): Promise<void>
+function update<T>(key: string, f: (val: T) => T, sync?: { sync: boolean }): Promise<void>
+async function update(key: string, f: (v: any) => any, options = { sync: true }) {
     await update1(key, f)
     if (options.sync) {
-        let o : any = await get(key, store)
+        let o : any = await get(key)
         if (o && "_rev" in o) {
-            await _updated(key, o._rev, store)
+            await _updated(key, o._rev)
         } else {
             reject(`Revision number not found for "${key}".`)
         }
@@ -69,10 +67,11 @@ interface DBAccessors {
 }
 
 interface DBGet {
-    (key: "user-settings", store: UseStore): Promise<UserSettings | undefined>
-    (key: "updated", store: UseStore): Promise<Updated | undefined>
-    (key: "settings", store: UseStore): Promise<Settings | undefined>
-    <T>(key: string, store: UseStore): Promise<T | undefined>
+    (key: "user-settings"): Promise<UserSettings | undefined>
+    (key: "updated"): Promise<Updated | undefined>
+    (key: "settings"): Promise<Settings | undefined>
+    <T>(key: string): Promise<T | undefined>
+    <T>(key: IDBValidKey): Promise<T | undefined>
 }
 
 interface Revision {
