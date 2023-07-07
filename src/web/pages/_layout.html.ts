@@ -2,6 +2,7 @@ import html, { when } from "../server/html.js"
 import { version } from "../server/settings.js"
 import createDb from "../server/drive-time-model.js"
 import { pluralize } from "./utils.js"
+import { daySymbol, nightSymbol } from "../server/utils.js"
 
 const layout = async (req: Request, o: LayoutTemplateArguments) => {
     const url = new URL(req.url).pathname
@@ -28,6 +29,7 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
         </ul>
         <ul>
             ${[
+                { url: "/web/entries/", text: "Drives" },
                 { url: "/web/entries/edit/", text: "New" },
                 { url: "/web/user-settings/edit/", text: "User Settings" },
             ].map(x => {
@@ -41,10 +43,10 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
         </ul>
     </nav>
     <form id=sync-form method=POST action="/web/sync/"></form>
-    <p><small>&#9728;
+    <p><small>${daySymbol}
     ${dayTotal.hours} hour${pluralize(dayTotal.hours)}
     ${dayTotal.minutes} minute${pluralize(dayTotal.minutes)}
-    🚗 &#9789; ${nightTotal.hours} hour${pluralize(nightTotal.hours)}
+    🚗 ${nightSymbol} ${nightTotal.hours} hour${pluralize(nightTotal.hours)}
     ${nightTotal.minutes} minute${pluralize(nightTotal.minutes)}.</small></p>
     ${main}
     <footer><p>${version}</p></footer>

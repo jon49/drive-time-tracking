@@ -112,6 +112,20 @@ class DriveTime {
         let updated = (await get("updated"))?.size ?? 0
         return updated
     }
+
+    async getDriveDates() {
+        let myEntries = await entries()
+        let driveDates = []
+        for (let entry of myEntries) {
+            let key_ = entry[0]
+            if (!Array.isArray(key_)) continue
+            if (key_[0] !== this.userId) continue
+            let key = key_[1]
+            if (!(typeof key === "string") || !isDate.test(key)) continue
+            driveDates.push(entry[1])
+        }
+        return driveDates
+    }
 }
 
 export default async function getDriveTime() {

@@ -64,3 +64,6 @@ export function tail<T>(xs: T[]) : T {
     return xs.slice(-1)[0]
 }
 
+export const daySymbol = "☀️"
+export const nightSymbol = "🌙"
+

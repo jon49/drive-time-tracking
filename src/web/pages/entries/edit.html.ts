@@ -1,13 +1,13 @@
 import html, { when } from "../../server/html.js"
 import layout from "../_layout.html.js"
-import { searchParams } from "../../server/utils.js"
+import { daySymbol, nightSymbol, searchParams } from "../../server/utils.js"
 import { Drive, DriveDate, TimeOfDay } from "../../server/db.js"
 import { PostHandlers } from "../../server/route.js"
 import createDb from "../../server/drive-time-model.js"
 import { getCurrentTime, pluralize, toLocaleTimeString, totalTime } from "../utils.js"
 
 function timeOfDay(time: TimeOfDay | undefined) {
-    let text = time === "night" ? "Night &#9789;" : "Day &#9728;"
+    let text = time === "night" ? `Night ${nightSymbol}` : `Day ${daySymbol}`
     return html`<button id=toggle-time formaction="?handler=toggleTime">$${text}</button>`
 }
 

@@ -16,7 +16,7 @@ export function pluralize(count: number) {
     return count === 1 ? '' : 's'
 }
 
-export function totalTime(start: string, end: string) {
+export function totalTime(start: string | undefined, end: string | undefined) {
     if (!start || !end) return { hours: 0, minutes: 0 }
     let startParts = start.split(":")
     let endParts = end.split(":")
@@ -36,7 +36,8 @@ export function totalTime(start: string, end: string) {
     }
 }
 
-export function toLocaleTimeString(time: string) {
+export function toLocaleTimeString(time: string | undefined) {
+    if (!time) return ""
     let parts = time.split(":")
     let hours = parseInt(parts[0])
     let minutes = parseInt(parts[1])
