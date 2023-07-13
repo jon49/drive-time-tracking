@@ -8,7 +8,7 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
     const url = new URL(req.url).pathname
     const { main, head, scripts } = o
     let db = await createDb()
-    let [syncCount, { dayTotal, nightTotal }] = await Promise.all([db.syncCount(), db.totalTime()])
+    let [syncCount, { day: dayTotal, night: nightTotal }] = await Promise.all([db.syncCount(), db.totalTime()])
     return html`
 <!DOCTYPE html>
 <html>
@@ -22,7 +22,6 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
     $${head}
 </head>
 <body>
-    <div id=messages></div>
     <nav>
         <ul>
             <li><a href="/web/"><strong>Drive Tracker</strong></a></li>

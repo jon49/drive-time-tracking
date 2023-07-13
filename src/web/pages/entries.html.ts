@@ -4,7 +4,7 @@ import layout from "./_layout.html.js";
 import html from "html-template-tag-stream";
 import { DriveDate } from "../server/db.js";
 import { daySymbol, nightSymbol } from "../server/utils.js";
-import { toLocaleTimeString, totalTime } from "./utils.js";
+import { normalizeTime, toLocaleTimeString, totalTime, totalTimeArray } from "./utils.js";
 
 function tbodyView(driveDates: DriveDate[]) {
         return driveDates.map(driveDate => {
@@ -20,12 +20,10 @@ function tbodyView(driveDates: DriveDate[]) {
             ${ () => {
                 if (index > 0) return null
                 // Get total time for the day
-                let total = driveDate.drives.reduce((total, drive) => {
-                    let driveTotal = totalTime(drive.start, drive.end)
-                    total.hours += driveTotal.hours
-                    total.minutes += driveTotal.minutes
-                    return total
-                }, { hours: 0, minutes: 0 })
+                let { day, night } = totalTimeArray(driveDate.drives)
+                let total = normalizeTime({
+                    hours: day.hours + night.hours,
+                    minutes: day.minutes + night.minutes })
                 return html`<td rowspan="${driveDate.drives.length}">${driveDate.date} (${total.hours}h ${total.minutes}m)</td>` 
             }}
             <td>${toLocaleTimeString(drive.start)}</td>
@@ -49,7 +47,7 @@ function render(driveDates: DriveDate[]) {
             <th>Start</th>
             <th>End</th>
             <th>Total</th>
-            <th>Daypart</th>
+            <th>${daySymbol}/${nightSymbol}</th>
         </tr>
     </thead>
     <tbody>${tbodyView(driveDates)}</tbody>

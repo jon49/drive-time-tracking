@@ -1,7 +1,7 @@
 import { DriveDate, get, getUserIndex, set, entries } from "./db.js"
 import { reject } from "./utils.js"
 import { createDateString, createInteger, createTimeOfDay, createTimeString, maybe, validateObject } from "./validation.js"
-import { getCurrentDate, totalTime } from "../pages/utils.js"
+import { getCurrentDate, totalTime, totalTimeArray } from "../pages/utils.js"
 
 const driveValidator = {
     date: createDateString('date'),
@@ -72,40 +72,16 @@ class DriveTime {
 
     async totalTime() {
         let myEntries = await entries()
-        let dayTotal = {
-            minutes: 0,
-            hours: 0,
-        }
-        let nightTotal = {
-            minutes: 0,
-            hours: 0,
-        }
+        let times = []
         for (let entry of myEntries) {
             let key_ = entry[0]
             if (!Array.isArray(key_)) continue
             let key = key_[1]
             if (!(typeof key === "string") || !isDate.test(key)) continue
-            for (let drive of entry[1].drives) {
-                if (drive.start && drive.end) {
-                    let time = totalTime(drive.start, drive.end)
-                    if (drive.time === "day") {
-                        dayTotal.minutes += time.minutes
-                        dayTotal.hours += time.hours
-                    } else {
-                        nightTotal.minutes += time.minutes
-                        nightTotal.hours += time.hours
-                    }
-                }
-            }
+            times.push(...entry[1].drives)
         }
 
-        return { dayTotal: {
-            minutes: dayTotal.minutes,
-            hours: dayTotal.hours,
-        }, nightTotal: {
-            minutes: nightTotal.minutes,
-            hours: nightTotal.hours,
-        }}
+        return totalTimeArray(times)
     }
 
     async syncCount() {

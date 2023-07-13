@@ -1,3 +1,5 @@
+import { Drive, TimeOfDay } from "../server/db.js"
+
 function padNumber(num: number) {
     return (""+num).padStart(2, "0")
 }
@@ -34,6 +36,33 @@ export function totalTime(start: string | undefined, end: string | undefined) {
         hours,
         minutes,
     }
+}
+
+export function totalTimeArray(times: Drive[]) :
+    { day: {hours: number, minutes: number}, night: {hours: number, minutes: number} } {
+    let day = { hours: 0, minutes: 0 }
+    let night = { hours: 0, minutes: 0 }
+    for (let time of times) {
+        let total = totalTime(time.start, time.end)
+        if (time.time === "day") {
+            day.hours += total.hours
+            day.minutes += total.minutes
+        } else {
+            night.hours += total.hours
+            night.minutes += total.minutes
+        }
+    }
+    normalizeTime(day)
+    normalizeTime(night)
+    return { day, night }
+}
+
+export function normalizeTime(time: {hours: number, minutes: number}) {
+    if (time.minutes >= 60) {
+        time.hours += 1
+        time.minutes -= 60
+    }
+    return time
 }
 
 export function toLocaleTimeString(time: string | undefined) {
