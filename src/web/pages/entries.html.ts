@@ -24,7 +24,7 @@ function tbodyView(driveDates: DriveDate[]) {
                 let total = normalizeTime({
                     hours: day.hours + night.hours,
                     minutes: day.minutes + night.minutes })
-                return html`<td rowspan="${driveDate.drives.length}">${driveDate.date} (${total.hours}h ${total.minutes}m)</td>` 
+                return html`<td rowspan="${driveDate.drives.length}"><a href="/web/entries/edit?date=${driveDate.date}">${driveDate.date}</a> (${total.hours}h ${total.minutes}m)</td>` 
             }}
             <td>${toLocaleTimeString(drive.start)}</td>
             <td>${toLocaleTimeString(drive.end)}</td>
