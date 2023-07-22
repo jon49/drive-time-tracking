@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-def main [build: bool = false] {
+def main [build: string = ''] {
 
     let targetDir = "public"
 
@@ -46,7 +46,7 @@ def main [build: bool = false] {
         '--entry-names=[dir]/[name].[hash]',
     ]
     | append (
-        if $build {
+        if $build == 'prod' {
             [ '--minify' ]
         } else { [] }
     ))
@@ -88,12 +88,14 @@ def main [build: bool = false] {
         'src/web/sw.ts',
     ]
     | append (
-        if $build {
+        if $build == 'prod' {
             ['--minify']
-        } else { [
+        } else if $build == '' { [
             $"--servedir=($targetDir)",
             '--watch'
-        ] }
+        ] } else {
+            []
+        }
     ))
 
     ^npx esbuild $sw

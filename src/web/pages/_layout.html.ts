@@ -3,12 +3,14 @@ import { version } from "../server/settings.js"
 import createDb from "../server/drive-time-model.js"
 import { pluralize } from "./utils.js"
 import { daySymbol, nightSymbol } from "../server/utils.js"
+import { globalDB } from "../server/global-model.js"
 
 const layout = async (req: Request, o: LayoutTemplateArguments) => {
     const url = new URL(req.url).pathname
     const { main, head, scripts } = o
     let db = await createDb()
-    let [syncCount, { day: dayTotal, night: nightTotal }] = await Promise.all([db.syncCount(), db.totalTime()])
+    let [syncCount, { day: dayTotal, night: nightTotal }, isLoggedIn] =
+        await Promise.all([db.syncCount(), db.totalTime(), globalDB.isLoggedIn()])
     return html`
 <!DOCTYPE html>
 <html>
@@ -37,8 +39,9 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
                 }
                 return html`<li><a href="${x.url}">${x.text}</a></li>`
             }) }
-            <li><button role=button form=sync-form disabled title="Sync hasn't been implemented yet.">Sync&nbsp;-&nbsp;${syncCount}</button></li>
-            <li><a role="button" disabled href="/login?handler=logout">Logout</a></li>
+            ${isLoggedIn
+                ? html`<li><a href="/logout">Logout</a></li>`
+            : html`<li><a href="/login">Login</a></li>`}
         </ul>
     </nav>
     <form id=sync-form method=POST action="/web/sync/"></form>

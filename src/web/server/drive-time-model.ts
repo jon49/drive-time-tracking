@@ -1,7 +1,7 @@
 import { DriveDate, get, getUserIndex, set, entries } from "./db.js"
 import { reject } from "./utils.js"
 import { createDateString, createInteger, createTimeOfDay, createTimeString, maybe, validateObject } from "./validation.js"
-import { getCurrentDate, totalTime, totalTimeArray } from "../pages/utils.js"
+import { getCurrentDate, totalTimeArray } from "../pages/utils.js"
 
 const driveValidator = {
     date: createDateString('date'),

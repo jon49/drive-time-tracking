@@ -2,9 +2,10 @@ import html, { when } from "../../server/html.js"
 import layout from "../_layout.html.js"
 import { daySymbol, nightSymbol, searchParams } from "../../server/utils.js"
 import { Drive, DriveDate, TimeOfDay } from "../../server/db.js"
-import { PostHandlers } from "../../server/route.js"
+import { PostHandlers, Route } from "../../server/route.js"
 import createDb from "../../server/drive-time-model.js"
 import { getCurrentTime, pluralize, toLocaleTimeString, totalTime } from "../utils.js"
+import { updated } from "../../server/sync.js"
 
 function timeOfDay(time: TimeOfDay | undefined) {
     let text = time === "night" ? `Night ${nightSymbol}` : `Day ${daySymbol}`
@@ -71,25 +72,29 @@ ${drives.map((drive, idx) => editEntry(idx, drive, date)).reverse()}`
 const post : PostHandlers = {
     update: async ({ data }) => {
         let db = await createDb()
-        db.saveDrive(data)
+        await db.saveDrive(data)
+        updated(true)
     },
     toggleTime: async ({ data }) => {
         let db = await createDb()
-        return db.toggleTimeOfDay(data)
+        await db.toggleTimeOfDay(data)
+        updated(data.end)
     },
     start: async ({ data }) => {
         let db = await createDb()
         data.start = getCurrentTime()
-        return db.saveDrive(data)
+        await db.saveDrive(data)
+        updated()
     },
     stop: async ({ data }) => {
         let db = await createDb()
         data.end = getCurrentTime()
-        return db.saveDrive(data)
+        await db.saveDrive(data)
+        updated(true)
     },
 }
 
-let index = {
+let index : Route = {
     route: /\/web\/entries\/edit\/$/,
     get: async (req: Request) => {
         let db = await createDb()

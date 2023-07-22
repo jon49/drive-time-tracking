@@ -6,15 +6,12 @@ export async function getUserIndex() {
     if (!settings) {
         // get global settings
         let global = <GlobalSettings | undefined>(await get1("global-settings"))
-        if (!global) {
-            // create global settings
-            await set("global-settings", global = {
+            ?? {
                 users: [
                     { name: "anonymous" }
                 ],
                 _rev: 0
-            })
-        }
+            }
         set("local-settings", settings = { user: global.users[0].name, id: 0 }, false)
     }
     return settings?.id ?? 0
@@ -22,15 +19,21 @@ export async function getUserIndex() {
 
 const get : DBGet = get1
 
-type Updated = Map<{ key: IDBValidKey }, number>
+type Updated = Set<string | number>
 
 const _updated =
-    async (key: IDBValidKey, revision: number) => {
+    async (key: IDBValidKey) => {
         await update1("updated", (val?: Updated) => {
             if (Array.isArray(key)) {
                 key = JSON.stringify(key)
             }
-            return (val || new Map()).set(key, revision)
+
+            // If key is not string or number then make it a string.
+            if (typeof key !== "string" && typeof key !== "number") {
+                key = key.toString()
+            }
+
+            return (val || new Set).add(key)
         })
     }
 
@@ -39,7 +42,7 @@ function set(key: string, value: any, sync?: boolean): Promise<void>
 async function set(key: IDBValidKey, value: any, sync = true) {
     await set1(key, value)
     if (sync) {
-        await _updated(key, value._rev)
+        await _updated(key)
     }
 }
 
@@ -50,7 +53,7 @@ async function update(key: string, f: (v: any) => any, options = { sync: true })
     if (options.sync) {
         let o : any = await get(key)
         if (o && "_rev" in o) {
-            await _updated(key, o._rev)
+            await _updated(key)
         } else {
             reject(`Revision number not found for "${key}".`)
         }
@@ -74,7 +77,7 @@ interface DBGet {
     <T>(key: IDBValidKey): Promise<T | undefined>
 }
 
-interface Revision {
+export interface Revision {
     _rev: number
 }
 
