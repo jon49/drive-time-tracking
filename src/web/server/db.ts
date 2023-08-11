@@ -7,17 +7,17 @@ export async function getUserIndex() {
         // get global settings
         let global = <GlobalSettings | undefined>(await get1("global-settings"))
             ?? {
-                users: [
-                    { name: "anonymous" }
-                ],
-                _rev: 0
-            }
+            users: [
+                { name: "anonymous" }
+            ],
+            _rev: 0
+        }
         set("local-settings", settings = { user: global.users[0].name, id: 0 }, false)
     }
     return settings?.id ?? 0
 }
 
-const get : DBGet = get1
+const get: DBGet = get1
 
 type Updated = Set<string | number>
 
@@ -31,6 +31,10 @@ const _updated =
             // If key is not string or number then make it a string.
             if (typeof key !== "string" && typeof key !== "number") {
                 key = key.toString()
+            }
+
+            if (val instanceof Map) {
+                val = new Set(val.keys())
             }
 
             return (val || new Set).add(key)
@@ -51,7 +55,7 @@ function update<T>(key: string, f: (val: T) => T, sync?: { sync: boolean }): Pro
 async function update(key: string, f: (v: any) => any, options = { sync: true }) {
     await update1(key, f)
     if (options.sync) {
-        let o : any = await get(key)
+        let o: any = await get(key)
         if (o && "_rev" in o) {
             await _updated(key)
         } else {
