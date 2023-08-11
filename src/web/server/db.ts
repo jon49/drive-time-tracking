@@ -33,10 +33,6 @@ const _updated =
                 key = key.toString()
             }
 
-            if (val instanceof Map) {
-                val = new Set(val.keys())
-            }
-
             return (val || new Set).add(key)
         })
     }
