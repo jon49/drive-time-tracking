@@ -9,8 +9,8 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
     const url = new URL(req.url).pathname
     const { main, head, scripts } = o
     let db = await createDb()
-    let [syncCount, { day: dayTotal, night: nightTotal }, isLoggedIn] =
-        await Promise.all([db.syncCount(), db.totalTime(), globalDB.isLoggedIn()])
+    let [{ day: dayTotal, night: nightTotal }, isLoggedIn] =
+        await Promise.all([db.totalTime(), globalDB.isLoggedIn()])
     return html`
 <!DOCTYPE html>
 <html>
@@ -20,7 +20,7 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drive Tracker</title>
     <link href="/web/css/index.css" rel=stylesheet>
-    <link href="/web/css/app.css" rel=stylesheet>
+    <link href="/web/css/web.css" rel=stylesheet>
     $${head}
 </head>
 <body>

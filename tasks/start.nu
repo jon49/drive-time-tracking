@@ -74,7 +74,7 @@ def main [build: string = ''] {
     # copy html files
     cp src/index.html $"($targetDir)/index.html"
 
-    let apploaderjs = (ls $"($targetDir)/**/app-loader*.js" | get name | first | str replace $targetDir "")
+    let apploaderjs = (ls $"($targetDir)/**/sw-loader*.js" | get name | first | str replace $targetDir "")
     open src/web/index.html
     | str replace '{{apploaderjs}}' $apploaderjs
     | save -f $"($targetDir)/web/index.html"

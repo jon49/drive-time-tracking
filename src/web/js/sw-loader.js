@@ -10,7 +10,7 @@
                     document.location.href = "/web/"
                 }
                 document.location.reload()
-            }, 100)
+            }, 250)
         })
     } else {
         alert("Service worker is not supported. Please use a modern browser.")

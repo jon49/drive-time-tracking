@@ -74,7 +74,7 @@ export function toLocaleTimeString(time: string | undefined) {
     date.setHours(hours)
     date.setMinutes(minutes)
     let local = date.toLocaleTimeString()
-    return `${local.slice(0, 5)}${local.slice(-3)}`
+    return `${local.slice(0, local.indexOf(":", 3))}${local.slice(-3)}`
 }
 
 

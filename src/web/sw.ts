@@ -2,8 +2,6 @@ import { version } from "./server/settings.js"
 import { getResponse } from "./service-worker/route-handling.js"
 import "./service-worker/routes.js"
 import links from "./entry-points.js"
-import { GlobalSettings, get, set } from "./server/db.js"
-import { clear, createStore, entries } from "idb-keyval"
 
 self.addEventListener("install", async (e: Event) => {
     // @ts-ignore
