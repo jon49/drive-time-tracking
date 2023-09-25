@@ -59,8 +59,8 @@ export function totalTimeArray(times: Drive[]) :
 
 export function normalizeTime(time: {hours: number, minutes: number}) {
     if (time.minutes >= 60) {
-        time.hours += 1
-        time.minutes -= 60
+        time.hours += Math.floor(time.minutes / 60)
+        time.minutes = time.minutes % 60
     }
     return time
 }
