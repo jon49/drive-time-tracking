@@ -54,6 +54,11 @@ const layout = async (req: Request, o: LayoutTemplateArguments) => {
     <footer><p>${version}</p></footer>
     ${ when(!!scripts, () => scripts!.map(x => html`<script src="${x}" type=module></script>`)) }
     <script src="/web/js/lib/mpa.min.js"></script>
+    ${ when(!!o.enableBeep, () => html`<script>
+            window.app = window.app || {};
+            window.app.enableBeep = true;
+    </script>`)}
+    <script src="/web/js/app.js"></script>
 </body>
 </html>`
 }
@@ -67,5 +72,6 @@ export interface LayoutTemplateArguments {
     main?: AsyncGenerator|string
     scripts?: string[]
     bodyAttr?: string
+    enableBeep?: boolean
 }
 

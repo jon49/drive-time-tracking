@@ -1,6 +1,6 @@
 import html, { when } from "../../server/html.js"
 import layout from "../_layout.html.js"
-import { daySymbol, nightSymbol, searchParams } from "../../server/utils.js"
+import { daySymbol, nightSymbol, searchParams, tail } from "../../server/utils.js"
 import { Drive, DriveDate, TimeOfDay } from "../../server/db.js"
 import { PostHandlers, Route } from "../../server/route.js"
 import createDb from "../../server/drive-time-model.js"
@@ -99,7 +99,8 @@ let index : Route = {
     get: async (req: Request) => {
         let db = await createDb()
         let driveDate = await db.get(searchParams<{date?: string}>(req))
-        return layout(req, { main: render(driveDate) })
+        let lastDrive = tail(driveDate.drives)
+        return layout(req, { main: render(driveDate), enableBeep: !lastDrive?.end })
     },
     post,
 }
